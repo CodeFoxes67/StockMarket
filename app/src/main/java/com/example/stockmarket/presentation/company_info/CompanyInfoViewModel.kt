@@ -6,10 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stockmarket.domain.model.CompanyInfo
+import com.example.stockmarket.domain.model.IntradayInfo
 import com.example.stockmarket.domain.repository.StockRepository
 import com.example.stockmarket.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,42 +26,35 @@ class CompanyInfoViewModel @Inject constructor(
         viewModelScope.launch {
             val symbol = savedStateHandle.get<String>("symbol") ?: return@launch
             state = state.copy(isLoading = true)
-            val companyInfoResult = async { repository.getCompanyInfo(symbol) }
-            val intradayInfoResult = async { repository.getIntradayInfo(symbol) }
-            when (val result = companyInfoResult.await()) {
+            val companyInfoResult = repository.getCompanyInfo(symbol)
+            val intradayInfoResult = repository.getIntradayInfo(symbol)
+            var company: CompanyInfo? = null
+            var error: String? = null
+            var stockInfo: List<IntradayInfo> = emptyList()
+            when (companyInfoResult) {
                 is Resource.Success -> {
-                    state = state.copy(
-                        company = result.data,
-                        isLoading = false,
-                        error = null,
-                    )
+                    company = companyInfoResult.data
                 }
                 is Resource.Error -> {
-                    state = state.copy(
-                        company = null,
-                        isLoading = false,
-                        error = result.message,
-                    )
+                    error = companyInfoResult.message
                 }
                 else -> Unit
             }
-            when (val result = intradayInfoResult.await()) {
+            when (intradayInfoResult) {
                 is Resource.Success -> {
-                    state = state.copy(
-                        stockInfo = result.data ?: emptyList(),
-                        isLoading = false,
-                        error = null,
-                    )
+                    stockInfo = intradayInfoResult.data ?: emptyList()
                 }
                 is Resource.Error -> {
-                    state = state.copy(
-                        stockInfo = emptyList(),
-                        isLoading = false,
-                        error = result.message,
-                    )
+                    error = intradayInfoResult.message
                 }
                 else -> Unit
             }
+            state = state.copy(
+                stockInfo = stockInfo,
+                company = company,
+                isLoading = false,
+                error = error,
+            )
         }
     }
 }

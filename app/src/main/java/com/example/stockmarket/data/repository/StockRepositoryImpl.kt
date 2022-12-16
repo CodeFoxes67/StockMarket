@@ -1,7 +1,6 @@
 package com.example.stockmarket.data.repository
 
 import com.example.stockmarket.data.csv.CSVParser
-import com.example.stockmarket.data.csv.CompanyListingsParser
 import com.example.stockmarket.data.csv.IntradayInfoParser
 import com.example.stockmarket.data.local.StockDatabase
 import com.example.stockmarket.data.mapper.toCompanyInfo
@@ -23,7 +22,7 @@ import javax.inject.Singleton
 @Singleton
 class StockRepositoryImpl @Inject constructor(
     private val api: StockApi,
-    private val db: StockDatabase,
+    db: StockDatabase,
     private val companyListingsParser: CSVParser<CompanyListing>,
     private val intradayInfoParser: IntradayInfoParser,
 ) : StockRepository {
